@@ -4,6 +4,7 @@ module Erl.Process
   , runProcess
   , receive
   , send
+  , (!)
   , spawn
   , spawn'
   , module RawExport
@@ -28,8 +29,10 @@ instance eqProcess :: Eq (Process a) where
 receive :: forall z a eff. Eff (rec :: REC z a, process :: Raw.PROCESS | eff) a
 receive = Raw.receive
 
-send :: forall eff a. Process a -> a -> Eff (process :: Raw.PROCESS | eff) a
+send :: forall eff a. Process a -> a -> Eff (process :: Raw.PROCESS | eff) Unit
 send p x = Raw.send (runProcess p) x
+
+infixr 6 send as !
 
 spawn' :: forall eff y b a. (forall z. Eff (rec :: REC z a, process :: Raw.PROCESS | eff) Unit) -> Eff (process :: Raw.PROCESS, rec :: REC y b | eff) (Process a)
 spawn' e =  Process <$> Raw.spawn (coerce e)
