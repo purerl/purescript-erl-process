@@ -1,0 +1,5 @@
+.psc-ide-port
+bower_components/
+ebin/
+erl_crash.dump
+output/
