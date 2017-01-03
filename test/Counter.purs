@@ -1,9 +1,9 @@
 module Test.Counter where
 
-import Prelude
-import Control.Monad.Eff
+import Prelude (Unit, bind, show, ($), (+), (-), (>>=))
+import Control.Monad.Eff (Eff, forE)
 import Control.Monad.Eff.Console (CONSOLE, log)
-import Erl.Process
+import Erl.Process (PROCESS, Process, REC, receive, spawn, (!))
 
 data Message = Add Int | Subtract Int | GetTotal (Process Int)
 
