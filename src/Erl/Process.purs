@@ -10,10 +10,10 @@ module Erl.Process
   , module RawExport
   ) where
 
-import Prelude
+import Prelude (class Eq, Unit, eq, (<$>))
 import Control.Monad.Eff
 import Erl.Process.Raw as Raw
-import Control.Monad.Eff.Unsafe (unsafeInterleaveEff)
+import Control.Monad.Eff.Unsafe (unsafeCoerceEff)
 import Erl.Process.Raw (PROCESS) as RawExport
 
 foreign import data REC :: * -> * -> !
@@ -38,10 +38,10 @@ spawn' :: forall eff y b a. (forall z. Eff (rec :: REC z a, process :: Raw.PROCE
 spawn' e =  Process <$> Raw.spawn (coerce e)
   where
   coerce :: forall z r. Eff (rec :: REC z a, process :: Raw.PROCESS | eff) r -> Eff (process :: Raw.PROCESS, rec :: REC y b | eff) r
-  coerce = unsafeInterleaveEff
+  coerce = unsafeCoerceEff
 
 spawn :: forall eff a. (forall z. Eff (rec :: REC z a, process :: Raw.PROCESS | eff) Unit) -> Eff (process :: Raw.PROCESS | eff) (Process a)
 spawn e =  Process <$> Raw.spawn (coerce e)
   where
   coerce :: forall z r. Eff (rec :: REC z a, process :: Raw.PROCESS | eff) r -> Eff (process :: Raw.PROCESS | eff) r
-  coerce = unsafeInterleaveEff
+  coerce = unsafeCoerceEff
