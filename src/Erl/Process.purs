@@ -10,8 +10,8 @@ module Erl.Process
   , module RawExport
   ) where
 
-import Prelude (class Eq, Unit, eq, (<$>))
-import Control.Monad.Eff
+import Prelude
+import Control.Monad.Eff (Eff)
 import Erl.Process.Raw as Raw
 import Control.Monad.Eff.Unsafe (unsafeCoerceEff)
 import Erl.Process.Raw (PROCESS) as RawExport

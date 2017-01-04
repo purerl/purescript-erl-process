@@ -1,6 +1,6 @@
 module Test.Raw where
 
-import Prelude (Unit, bind, show, unit, ($), (<>))
+import Prelude
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Console (CONSOLE, log)
 import Erl.Process.Raw (PROCESS, receive, send, spawn)

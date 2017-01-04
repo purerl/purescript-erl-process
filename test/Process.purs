@@ -1,6 +1,6 @@
 module Test.Process where
 
-import Prelude (Unit, bind, pure, show, unit, void, ($), (<>))
+import Prelude
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Console (CONSOLE, log)
 import Erl.Process (PROCESS, REC, receive, spawn, spawn', (!))
