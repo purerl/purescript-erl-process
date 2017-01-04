@@ -1,4 +1,4 @@
-.PHONY: ps erl all run
+.PHONY: ps erl all test
 
 all: ps erl
 
@@ -9,5 +9,5 @@ erl:
 	mkdir -p ebin
 	erlc -o ebin/ output/*/*.erl
 
-run:
+test:
 	erl -pa ebin -noshell -eval '(test_main:main())()' -eval 'init:stop()'
