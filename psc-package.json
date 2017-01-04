@@ -1,6 +1,6 @@
 {
     "name": "erl-process",
-    "set":  "erl-0.10.1",
+    "set":  "erl-0.10.2-4",
     "source": "https://github.com/purerl/package-sets.git",
     "depends": [
         "console",
