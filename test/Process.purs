@@ -1,9 +1,9 @@
 module Test.Process where
 
 import Prelude
-import Control.Monad.Eff
+import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Console (CONSOLE, log)
-import Erl.Process
+import Erl.Process (PROCESS, REC, receive, spawn, spawn', (!))
 
 noReceive :: forall eff. Eff eff Unit
 noReceive = pure unit
@@ -25,7 +25,7 @@ ignore = do
   log $ "PHANTOM IGNORE recieved: " <> a
   pure unit
 
-spawnIgnore  :: forall eff z. Eff (process :: PROCESS, console :: CONSOLE | eff) Unit
+spawnIgnore  :: forall eff. Eff (process :: PROCESS, console :: CONSOLE | eff) Unit
 spawnIgnore = do
   spawn ignore
   pure unit
