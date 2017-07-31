@@ -3,7 +3,7 @@ module Test.Process where
 import Prelude
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Console (CONSOLE, log)
-import Erl.Process (PROCESS, REC, receive, spawn, spawn', (!))
+import Erl.Process (PROCESS, REC, receive, spawn, (!))
 
 noReceive :: forall eff. Eff eff Unit
 noReceive = pure unit
@@ -11,29 +11,32 @@ noReceive = pure unit
 spawnNoReceive :: forall eff. Eff (process :: PROCESS | eff) Unit
 spawnNoReceive = void $ spawn noReceive
 
-ignore2 :: forall eff z. Eff (rec :: REC z String, process :: PROCESS, console :: CONSOLE | eff) Unit
+ignore2 :: forall eff z. Eff (rec :: REC z Int, process :: PROCESS, console :: CONSOLE | eff) Unit
 ignore2 = do
   a <- receive
-  log $ "PHANTOM IGNORE recieved: " <> a
+  log $ "PHANTOM IGNORE recieved: " <> show "asfd"
   pure unit
 
 ignore :: forall eff z. Eff (rec :: REC z String, process :: PROCESS, console :: CONSOLE | eff) Unit
 ignore = do
   a <- receive
-  p <- spawn' ignore2
-  p ! "goodbye world"
+  p <- spawn ignore2_Annotated
+  p ! 42
   log $ "PHANTOM IGNORE recieved: " <> a
   pure unit
+  where
+  ignore2_Annotated :: forall z'. Eff (rec :: REC z' Int, rec :: REC z String, process :: PROCESS, console :: CONSOLE | eff) Unit
+  ignore2_Annotated = ignore2
 
 spawnIgnore  :: forall eff. Eff (process :: PROCESS, console :: CONSOLE | eff) Unit
 spawnIgnore = do
-  spawn ignore
+  _ <-  spawn ignore
   pure unit
 
 logger :: forall eff z. Eff (rec :: REC z Int, process :: PROCESS, console :: CONSOLE | eff) Unit
 logger = do
-  a <- receive
-  p <- spawn' ignore
+  a :: Int <- receive
+  p <- spawn ignore
   log $ "PHANTOM Received: " <> show a
   p ! "hello world"
   p ! "foo"

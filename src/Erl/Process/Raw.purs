@@ -1,11 +1,11 @@
 module Erl.Process.Raw (Pid, spawn, PROCESS, send, receive) where
 
 import Prelude
-import Control.Monad.Eff (Eff)
+import Control.Monad.Eff (Eff, kind Effect)
 
-foreign import data Pid :: *
+foreign import data Pid :: Type
 
-foreign import data PROCESS :: !
+foreign import data PROCESS :: Effect
 
 instance eqPid :: Eq Pid where
   eq = eqNative
