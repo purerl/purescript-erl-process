@@ -1,40 +1,38 @@
 module Test.Process where
 
 import Prelude
-import Control.Monad.Eff (Eff)
-import Control.Monad.Eff.Console (CONSOLE, log)
-import Erl.Process (PROCESS, REC, receive, spawn, (!))
 
-noReceive :: forall eff. Eff eff Unit
-noReceive = pure unit
+import Effect (Effect)
+import Effect.Console (log)
+import Erl.Process (spawn, (!))
 
-spawnNoReceive :: forall eff. Eff (process :: PROCESS | eff) Unit
+noReceive :: forall a. a -> Effect Unit
+noReceive _ = pure unit
+
+spawnNoReceive :: Effect Unit
 spawnNoReceive = void $ spawn noReceive
 
-ignore2 :: forall eff z. Eff (rec :: REC z Int, process :: PROCESS, console :: CONSOLE | eff) Unit
-ignore2 = do
+ignore2 :: forall a. Effect a -> Effect Unit
+ignore2 receive = do
   a <- receive
-  log $ "PHANTOM IGNORE recieved: " <> show "asfd"
+  log $ "PHANTOM IGNORE received: " <> show "asfd"
   pure unit
 
-ignore :: forall eff z. Eff (rec :: REC z String, process :: PROCESS, console :: CONSOLE | eff) Unit
-ignore = do
+ignore :: Effect String -> Effect Unit
+ignore receive = do
   a <- receive
-  p <- spawn ignore2_Annotated
+  p <- spawn ignore2
   p ! 42
-  log $ "PHANTOM IGNORE recieved: " <> a
+  log $ "PHANTOM IGNORE received: " <> a
   pure unit
-  where
-  ignore2_Annotated :: forall z'. Eff (rec :: REC z' Int, rec :: REC z String, process :: PROCESS, console :: CONSOLE | eff) Unit
-  ignore2_Annotated = ignore2
 
-spawnIgnore  :: forall eff. Eff (process :: PROCESS, console :: CONSOLE | eff) Unit
+spawnIgnore  :: Effect Unit
 spawnIgnore = do
   _ <-  spawn ignore
   pure unit
 
-logger :: forall eff z. Eff (rec :: REC z Int, process :: PROCESS, console :: CONSOLE | eff) Unit
-logger = do
+logger :: Effect Int -> Effect Unit
+logger receive = do
   a :: Int <- receive
   p <- spawn ignore
   log $ "PHANTOM Received: " <> show a
@@ -42,11 +40,11 @@ logger = do
   p ! "foo"
   pure unit
 
-test :: forall eff. Eff (process :: PROCESS, console :: CONSOLE | eff) Unit
+test :: Effect Unit
 test = do
   log "PHANTOM Spawning proc"
   p <- spawn logger
   p ! 123
   p0 <- spawn noReceive
-  _ <- spawn spawnIgnore
+  _ <- spawnIgnore
   pure unit
