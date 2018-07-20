@@ -6,6 +6,8 @@ import Effect (Effect)
 import Effect.Console (log)
 import Erl.Process (spawn, (!))
 
+-- Don't ask me what all the PHANTOM logging strings are... What planet was I on, this surely made sense?
+
 noReceive :: forall a. a -> Effect Unit
 noReceive _ = pure unit
 
@@ -31,9 +33,9 @@ spawnIgnore = do
   _ <-  spawn ignore
   pure unit
 
-logger :: Effect Int -> Effect Unit
+logger :: forall a. Show a => Effect a -> Effect Unit
 logger receive = do
-  a :: Int <- receive
+  a <- receive
   p <- spawn ignore
   log $ "PHANTOM Received: " <> show a
   p ! "hello world"
@@ -45,6 +47,8 @@ test = do
   log "PHANTOM Spawning proc"
   p <- spawn logger
   p ! 123
+  p2 <- spawn logger
+  p2 ! "one two three"
   p0 <- spawn noReceive
   _ <- spawnIgnore
   pure unit
