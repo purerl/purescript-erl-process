@@ -35,7 +35,7 @@ More examples can be found in [the tests](https://github.com/purerl/purescript-e
 Low level (unsafe) FFI bindings are provided in `Erl.Process.Raw`.
 
 ```purescript
-proc :: forall eff. Eff (console :: CONSOLE, process :: PROCESS | eff) Unit
+proc :: forall eff. Efffect Unit
 proc = do
   n :: Int <- receive
   log $ "Received: " <> show n
