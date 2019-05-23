@@ -33,11 +33,9 @@ infixr 6 send as !
 spawn :: forall a. (SpawnedProcessState a -> Effect Unit) -> Effect (Process a)
 spawn e = Process <$> Raw.spawn (e  { receive: Raw.receive
                                     , receiveWithTimeout: Raw.receiveWithTimeout
-                                    }
-                                    )
+                                    })
 
 spawnLink :: forall a. (SpawnedProcessState a -> Effect Unit) -> Effect (Process a)
 spawnLink e = Process <$> Raw.spawnLink (e  { receive: Raw.receive
-                                    , receiveWithTimeout: Raw.receiveWithTimeout
-                                    }
-                                    )
+                                            , receiveWithTimeout: Raw.receiveWithTimeout
+                                            })
