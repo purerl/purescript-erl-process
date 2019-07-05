@@ -26,4 +26,3 @@ infixr 6 send as !
 
 spawn :: forall a. (Effect a -> Effect Unit) -> Effect (Process a)
 spawn e = Process <$> Raw.spawn (e Raw.receive)
-

@@ -1,5 +1,5 @@
 -module(erl_process_raw@foreign).
--export([eqNative/2, spawn/1, send/1, 'receive'/0]).
+-export([eqNative/2, spawn/1, send/1, 'receive'/0, setFlag/2]).
 
 eqNative(X, Y) -> X == Y.
 
@@ -15,3 +15,7 @@ end.
   fun () ->
     receive X -> X end
   end.
+
+setFlag(Flag, Value) -> fun() ->
+  erlang:process_flag(Flag, Value)
+end.
