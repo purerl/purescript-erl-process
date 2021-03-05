@@ -8,6 +8,8 @@ module Erl.Process
   , receiveWithTimeout
   , spawn
   , spawnLink
+  , class HasProcess
+  , getProcess
   ) where
 
 import Prelude
@@ -56,3 +58,12 @@ spawn (ProcessM e) = Process <$> Raw.spawn e
 
 spawnLink :: forall a. ProcessM a Unit -> Effect (Process a)
 spawnLink (ProcessM e) = Process <$> Raw.spawnLink e
+
+class HasProcess b a where
+  getProcess :: a -> Process b
+
+instance processHasProcess :: HasProcess b (Process b) where
+  getProcess = identity
+
+instance processHasRawPid :: Raw.HasRawPid (Process b) where
+  getRawPid (Process pid) = pid
