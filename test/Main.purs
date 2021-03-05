@@ -14,5 +14,5 @@ main = do
   Raw.test
   log "Wrapped tests:"
   Process.test
-  log "Counter:" 
+  log "Counter:"
   Counter.test
