@@ -3,25 +3,25 @@ module Test.Process where
 import Prelude
 
 import Effect (Effect)
-import Erl.Process (SpawnedProcessState, spawn, (!))
+import Effect.Class (liftEffect)
+import Erl.Process (ProcessM, receive, spawn, (!))
 
-
-noReceive :: forall a. a -> Effect Unit
-noReceive _ = pure unit
+noReceive :: forall a. ProcessM a Unit
+noReceive = pure unit
 
 spawnNoReceive :: Effect Unit
 spawnNoReceive = void $ spawn noReceive
 
-ignore2 :: forall a. SpawnedProcessState a -> Effect Unit
-ignore2 {receive} = do
+ignore2 :: forall a. ProcessM a Unit
+ignore2 = do
   a <- receive
   pure unit
 
-ignore :: SpawnedProcessState String -> Effect Unit
-ignore {receive} = do
+ignore :: ProcessM String Unit
+ignore = do
   a <- receive
-  p <- spawn ignore2
-  p ! 42
+  p <- liftEffect $ spawn ignore2
+  liftEffect $ p ! 42
   pure unit
 
 spawnIgnore  :: Effect Unit
@@ -29,13 +29,14 @@ spawnIgnore = do
   _ <-  spawn ignore
   pure unit
 
-logger :: forall a. Show a => SpawnedProcessState a -> Effect Unit
-logger {receive} = do
+logger :: forall a. Show a => ProcessM a Unit
+logger = do
   a <- receive
-  p <- spawn ignore
-  p ! "hello world"
-  p ! "foo"
-  pure unit
+  liftEffect do
+    p <- spawn ignore
+    p ! "hello world"
+    p ! "foo"
+    pure unit
 
 test :: Effect Unit
 test = do
