@@ -1,7 +1,7 @@
 module Erl.Process
-  ( Process(..)
-  , SpawnedProcessState(..)
-  , runProcess
+  ( Process
+  , ProcessM
+  , toPid
   , send
   , (!)
   , spawn
@@ -11,31 +11,46 @@ module Erl.Process
 import Prelude
 
 import Effect (Effect)
+import Effect.Class (class MonadEffect)
+import Erl.Process.Class (class HasSelf)
 import Erl.Process.Raw as Raw
 
-newtype Process a = Process Raw.Pid
+newtype Process (a :: Type) = Process Raw.Pid
 
-type SpawnedProcessState a = { receive :: Effect a
-                             , receiveWithTimeout :: Int -> a -> Effect a
-                             }
-
-runProcess :: forall a. Process a -> Raw.Pid
-runProcess (Process pid) = pid
+toPid :: forall a. Process a -> Raw.Pid
+toPid (Process pid) = pid
 
 instance eqProcess :: Eq (Process a) where
-  eq a b = eq (runProcess a) (runProcess b)
+  eq a b = eq (toPid a) (toPid b)
+
+
+newtype ProcessM (a :: Type) b = ProcessM (Effect b)
+derive newtype instance functorProcessM :: Functor (ProcessM a)
+derive newtype instance applyProcessM :: Apply (ProcessM a)
+derive newtype instance applictativeProcessM :: Applicative (ProcessM a)
+derive newtype instance bindProcessM :: Bind (ProcessM a)
+derive newtype instance monadProcessM :: Monad (ProcessM a)
+
+instance monadEffectProcessM :: MonadEffect (ProcessM a) where
+  liftEffect = ProcessM
+
+receive :: forall a. ProcessM a a
+receive = ProcessM Raw.receive
+
+receiveWithTimeout :: forall a. Int -> a -> ProcessM a a
+receiveWithTimeout n a = ProcessM $ Raw.receiveWithTimeout n a
+
+instance selfProcessM :: HasSelf (ProcessM a) (Process a) where
+  self :: forall a. ProcessM a (Process a)
+  self = ProcessM $ Process <$> Raw.self
 
 send :: forall a. Process a -> a -> Effect Unit
-send p x = Raw.send (runProcess p) x
+send p x = Raw.send (toPid p) x
 
 infixr 6 send as !
 
-spawn :: forall a. (SpawnedProcessState a -> Effect Unit) -> Effect (Process a)
-spawn e = Process <$> Raw.spawn (e  { receive: Raw.receive
-                                    , receiveWithTimeout: Raw.receiveWithTimeout
-                                    })
+spawn :: forall a. ProcessM a Unit -> Effect (Process a)
+spawn (ProcessM e) = Process <$> Raw.spawn e
 
-spawnLink :: forall a. (SpawnedProcessState a -> Effect Unit) -> Effect (Process a)
-spawnLink e = Process <$> Raw.spawnLink (e  { receive: Raw.receive
-                                            , receiveWithTimeout: Raw.receiveWithTimeout
-                                            })
+spawnLink :: forall a. ProcessM a Unit -> Effect (Process a)
+spawnLink (ProcessM e) = Process <$> Raw.spawnLink e

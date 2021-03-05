@@ -1,4 +1,4 @@
-module Erl.Process.Raw (Pid, spawn, spawnLink, send, receive, receiveWithTimeout) where
+module Erl.Process.Raw (Pid, spawn, spawnLink, send, receive, receiveWithTimeout, self) where
 
 import Prelude
 
@@ -19,3 +19,5 @@ foreign import send :: forall a. Pid -> a -> Effect Unit
 foreign import receive :: forall a. Effect a
 
 foreign import receiveWithTimeout :: forall a. Int -> a -> Effect a
+
+foreign import self :: Effect Pid

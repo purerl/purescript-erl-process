@@ -5,7 +5,8 @@
          spawnLink/1,
          send/1,
          'receive'/0,
-         receiveWithTimeout/2
+         receiveWithTimeout/2,
+         self/0
         ]).
 
 eqNative(X, Y) -> X == Y.
@@ -32,3 +33,5 @@ receiveWithTimeout(Timeout, Msg) ->
       Timeout -> Msg
     end
   end.
+
+self() -> fun () -> erlang:self() end.
