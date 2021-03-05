@@ -4,6 +4,8 @@ module Erl.Process
   , toPid
   , send
   , (!)
+  , receive
+  , receiveWithTimeout
   , spawn
   , spawnLink
   ) where

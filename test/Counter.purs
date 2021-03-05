@@ -3,25 +3,26 @@ module Test.Counter where
 import Prelude
 
 import Effect (Effect, forE)
+import Effect.Class (liftEffect)
 import Effect.Console (log)
-import Erl.Process (Process, SpawnedProcessState, spawn, (!))
+import Erl.Process (Process, ProcessM, receive, spawn, (!))
 
 data Message = Add Int | Subtract Int | GetTotal (Process Int)
 
-counter :: SpawnedProcessState Message -> Effect Unit
-counter {receive} = counter' 0
+counter :: ProcessM Message Unit
+counter = counter' 0
   where
-    counter' :: Int -> Effect Unit
+    counter' :: Int -> ProcessM Message Unit
     counter' n =
       receive >>= case _ of
         Add m -> counter' (n+m)
         Subtract m -> counter' (n-m)
-        GetTotal proc -> proc ! n
+        GetTotal proc -> liftEffect $ proc ! n
 
-logger :: forall a. Show a => SpawnedProcessState a -> Effect Unit
-logger {receive} = do
+logger :: forall a. Show a => ProcessM a Unit
+logger = do
   a <- receive
-  log $ show a
+  liftEffect $ log $ show a
 
 test :: Effect Unit
 test = do
