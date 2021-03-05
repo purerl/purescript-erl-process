@@ -2,9 +2,11 @@ module Test.Process where
 
 import Prelude
 
+import Data.Either (Either(..))
 import Effect (Effect)
 import Effect.Class (liftEffect)
-import Erl.Process (ProcessM, receive, spawn, (!))
+import Effect.Console (log)
+import Erl.Process (ExitMsg(..), ExitReason(..), ProcessM, receive, receiveWithTrap, spawn, trapExit, (!))
 
 noReceive :: forall a. ProcessM a Unit
 noReceive = pure unit
@@ -37,6 +39,16 @@ logger = do
     p ! "hello world"
     p ! "foo"
     pure unit
+
+trapTest :: forall a. Show a => ProcessM a Unit
+trapTest = do
+  a <- receive
+  trapExit do
+    -- spawn thing that exits here
+    receiveWithTrap >>= case _ of
+      Left (ExitReason _ Killed) -> liftEffect $ log "killed"
+      _ -> pure unit
+
 
 test :: Effect Unit
 test = do

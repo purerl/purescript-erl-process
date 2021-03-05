@@ -5,14 +5,21 @@ module Erl.Process.Raw
   , send
   , receive
   , receiveWithTimeout
+  , receiveWithTrap
+  , receiveWithTrapAndTimeout
+  , setProcessFlagTrapExit
+  , ExitReason(..)
+  , ExitMsg(..)
   , self
-  , class HasRawPid
-  , getRawPid
+  , class HasPid
+  , getPid
   ) where
 
 import Prelude
 
+import Data.Either (Either)
 import Effect (Effect)
+import Foreign (Foreign)
 
 foreign import data Pid :: Type
 
@@ -32,8 +39,20 @@ foreign import receiveWithTimeout :: forall a. Int -> a -> Effect a
 
 foreign import self :: Effect Pid
 
-class HasRawPid a where
-  getRawPid :: a -> Pid
+class HasPid a where
+  getPid :: a -> Pid
 
-instance pidHasRawPid :: HasRawPid Pid where
-  getRawPid = identity
+instance pidHasPid :: HasPid Pid where
+  getPid = identity
+
+data ExitReason = ExitReason Pid ExitMsg
+data ExitMsg
+  = Normal
+  | Killed
+  | Other Foreign
+
+foreign import receiveWithTrap :: forall a. Effect (Either ExitReason a)
+
+foreign import receiveWithTrapAndTimeout :: forall a. Int -> a -> Effect (Either ExitReason a)
+
+foreign import setProcessFlagTrapExit :: Boolean -> Effect Boolean
