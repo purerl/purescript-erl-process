@@ -9,7 +9,8 @@
          receiveWithTrap/0,
          receiveWithTrapAndTimeout/2,
          self/0,
-         setProcessFlagTrapExit/1
+         setProcessFlagTrapExit/1,
+         exit/1
         ]).
 
 eqNative(X, Y) -> X == Y.
@@ -40,17 +41,21 @@ receiveWithTimeout(Timeout, Msg) ->
 receiveWithTrap() ->
   fun () ->
     receive
-      {'EXIT', Pid, kill  } -> {left, {exitMsg, Pid, {kill}}};
-      {'EXIT', Pid, normal} -> {left, {exitMsg, Pid, {normal}}};
-      {'EXIT', Pid, Other } -> {left, {exitMsg, Pid, {other, Other}}};
-      X                     -> {right, X}
+      {'EXIT', Pid, killed} ->
+        {left, {exitMsg, Pid, {kill}}};
+      {'EXIT', Pid, normal} ->
+        {left, {exitMsg, Pid, {normal}}};
+      {'EXIT', Pid, Other } ->
+        {left, {exitMsg, Pid, {other, Other}}};
+      X                     -> 
+        {right, X}
     end
   end.
 
 receiveWithTrapAndTimeout(Timeout, Msg) ->
   fun () ->
     receive
-      {'EXIT', Pid, kill  } -> {left, {exitMsg, Pid, {kill}}};
+      {'EXIT', Pid, killed} -> {left, {exitMsg, Pid, {killed}}};
       {'EXIT', Pid, normal} -> {left, {exitMsg, Pid, {normal}}};
       {'EXIT', Pid, Other } -> {left, {exitMsg, Pid, {other, Other}}};
       X                     -> {right, X}
@@ -64,3 +69,5 @@ self() -> fun () -> erlang:self() end.
 setProcessFlagTrapExit(TrapExit) -> fun() ->
   erlang:process_flag(trap_exit, TrapExit)
 end.
+
+exit(Term) -> fun () -> io:format(user, "Exiting", []), erlang:exit(Term) end.

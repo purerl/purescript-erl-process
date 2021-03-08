@@ -13,6 +13,7 @@ module Erl.Process.Raw
   , self
   , class HasPid
   , getPid
+  , exit
   ) where
 
 import Prelude
@@ -56,3 +57,5 @@ foreign import receiveWithTrap :: forall a. Effect (Either ExitReason a)
 foreign import receiveWithTrapAndTimeout :: forall a. Int -> a -> Effect (Either ExitReason a)
 
 foreign import setProcessFlagTrapExit :: Boolean -> Effect Boolean
+
+foreign import exit :: Foreign -> Effect Unit
