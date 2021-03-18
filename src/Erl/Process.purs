@@ -1,6 +1,7 @@
 module Erl.Process
   ( Process
   , ProcessM
+  , ProcessTrapM
   , toPid
   , send
   , (!)
@@ -10,13 +11,20 @@ module Erl.Process
   , spawnLink
   , class HasProcess
   , getProcess
+  , trapExit
+  , receiveWithTrap
+  , receiveWithTrapAndTimeout
+  , module RawExport
   ) where
 
 import Prelude
 
+import Data.Either (Either)
 import Effect (Effect)
-import Effect.Class (class MonadEffect)
+import Effect.Class (class MonadEffect, liftEffect)
 import Erl.Process.Class (class HasSelf)
+import Erl.Process.Raw (ExitReason(..), ExitMsg(..)) as RawExport
+import Erl.Process.Raw (ExitReason)
 import Erl.Process.Raw as Raw
 
 newtype Process (a :: Type) = Process Raw.Pid
@@ -31,7 +39,7 @@ instance eqProcess :: Eq (Process a) where
 newtype ProcessM (a :: Type) b = ProcessM (Effect b)
 derive newtype instance functorProcessM :: Functor (ProcessM a)
 derive newtype instance applyProcessM :: Apply (ProcessM a)
-derive newtype instance applictativeProcessM :: Applicative (ProcessM a)
+derive newtype instance applicativeProcessM :: Applicative (ProcessM a)
 derive newtype instance bindProcessM :: Bind (ProcessM a)
 derive newtype instance monadProcessM :: Monad (ProcessM a)
 
@@ -43,6 +51,29 @@ receive = ProcessM Raw.receive
 
 receiveWithTimeout :: forall a. Int -> a -> ProcessM a a
 receiveWithTimeout n a = ProcessM $ Raw.receiveWithTimeout n a
+
+newtype ProcessTrapM (a :: Type) b = ProcessTrapM (Effect b)
+derive newtype instance functorProcessTrapM :: Functor (ProcessTrapM a)
+derive newtype instance applyProcessTrapM :: Apply (ProcessTrapM a)
+derive newtype instance applicativeProcessTrapM :: Applicative (ProcessTrapM a)
+derive newtype instance bindProcessTrapM :: Bind (ProcessTrapM a)
+derive newtype instance monadProcessTrapM :: Monad (ProcessTrapM a)
+
+instance monadEffectProcessTrapM :: MonadEffect (ProcessTrapM a) where
+  liftEffect = ProcessTrapM
+
+receiveWithTrap :: forall a. ProcessTrapM a (Either ExitReason a)
+receiveWithTrap = ProcessTrapM Raw.receiveWithTrap
+
+receiveWithTrapAndTimeout :: forall a. Int -> a -> ProcessTrapM a (Either ExitReason a)
+receiveWithTrapAndTimeout timeout default = ProcessTrapM $ Raw.receiveWithTrapAndTimeout timeout default
+
+trapExit :: forall a b. ProcessTrapM a b -> ProcessM a b
+trapExit (ProcessTrapM e) = ProcessM $ liftEffect do
+  void $ Raw.setProcessFlagTrapExit true
+  res <- e
+  void $ Raw.setProcessFlagTrapExit false
+  pure res
 
 instance selfProcessM :: HasSelf (ProcessM a) (Process a) where
   self :: forall a. ProcessM a (Process a)
@@ -65,5 +96,5 @@ class HasProcess b a where
 instance processHasProcess :: HasProcess b (Process b) where
   getProcess = identity
 
-instance processHasRawPid :: Raw.HasRawPid (Process b) where
-  getRawPid (Process pid) = pid
+instance processHasPid :: Raw.HasPid (Process b) where
+  getPid (Process pid) = pid
