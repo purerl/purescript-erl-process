@@ -70,4 +70,4 @@ setProcessFlagTrapExit(TrapExit) -> fun() ->
   erlang:process_flag(trap_exit, TrapExit)
 end.
 
-exit(Term) -> fun () -> io:format(user, "Exiting", []), erlang:exit(Term) end.
+exit(Term) -> fun () -> erlang:exit(Term) end.
