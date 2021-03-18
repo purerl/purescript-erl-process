@@ -3,28 +3,11 @@ module Test.Raw where
 import Prelude
 
 import Control.Monad.Free (Free)
-import Debug.Trace (traceM)
-import Effect (Effect)
-import Effect.Console (log)
-import Effect.Ref as Ref
 import Erl.Process.Raw (receive, self, send, spawn, spawnLink)
 import Erl.Test.EUnit (TestF, suite, test)
 import Test.Assert (assert, assertFalse, assertTrue, assertTrue')
 
--- proc :: Effect Unit
--- proc = do
---   n :: Int <- receive
---   log $ "RAW Received: " <> show n
---   proc
-
--- test :: Effect Unit
--- test = do
---   log "RAW Spawning proc"
---   pid <- spawn proc
---   send pid 42
---   send pid 12
---   log "RAW Spawned proc"
-
+tests :: Free TestF Unit
 tests = 
   suite "raw tests" do
     test "send stuff to spawned process" do

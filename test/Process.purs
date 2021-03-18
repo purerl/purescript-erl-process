@@ -4,33 +4,15 @@ import Prelude
 
 import Control.Monad.Free (Free)
 import Data.Either (Either(..), isLeft)
-import Debug.Trace (traceM)
-import Effect (Effect)
 import Effect.Class (liftEffect)
-import Effect.Console (log)
 import Effect.Exception (throw)
-import Effect.Ref as Ref
-import Erl.Process (ExitMsg(..), ExitReason(..), ProcessM, receive, receiveWithTrap, spawn, spawnLink, trapExit, (!))
+import Erl.Process (ExitReason, ProcessM, receive, receiveWithTrap, spawn, spawnLink, trapExit, (!))
 import Erl.Process.Class (self)
 import Erl.Process.Raw as Raw
 import Erl.Test.EUnit (TestF, suite, test)
-import Foreign as Foregin
-import Test.Assert (assert, assertEqual, assertFalse, assertTrue, assertTrue')
+import Foreign as Foreign
+import Test.Assert (assertTrue)
 import Unsafe.Coerce (unsafeCoerce)
-
--- proc :: Effect Unit
--- proc = do
---   n :: Int <- receive
---   log $ "RAW Received: " <> show n
---   proc
-
--- test :: Effect Unit
--- test = do
---   log "RAW Spawning proc"
---   pid <- spawn proc
---   send pid 42
---   send pid 12
---   log "RAW Spawned proc"
 
 data Foo = Foo Int | Blah String | Whatever Boolean Number
 derive instance eqFoo :: Eq Foo
@@ -88,7 +70,7 @@ tests =
         trapExit do
           _ <- liftEffect $ spawnLink do
             liftEffect $ parent ! 1
-            liftEffect $ Raw.exit (Foregin.unsafeToForeign true)
+            liftEffect $ Raw.exit (Foreign.unsafeToForeign true)
             pure unit
 
           first <- receiveWithTrap
