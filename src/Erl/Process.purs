@@ -14,6 +14,7 @@ module Erl.Process
   , trapExit
   , receiveWithTrap
   , receiveWithTrapAndTimeout
+  , unsafeRunProcessM
   , module RawExport
   ) where
 
@@ -35,13 +36,15 @@ toPid (Process pid) = pid
 instance eqProcess :: Eq (Process a) where
   eq a b = eq (toPid a) (toPid b)
 
-
 newtype ProcessM (a :: Type) b = ProcessM (Effect b)
 derive newtype instance functorProcessM :: Functor (ProcessM a)
 derive newtype instance applyProcessM :: Apply (ProcessM a)
 derive newtype instance applicativeProcessM :: Applicative (ProcessM a)
 derive newtype instance bindProcessM :: Bind (ProcessM a)
 derive newtype instance monadProcessM :: Monad (ProcessM a)
+
+unsafeRunProcessM :: forall a b. ProcessM a b -> Effect b
+unsafeRunProcessM (ProcessM b) = b
 
 instance monadEffectProcessM :: MonadEffect (ProcessM a) where
   liftEffect = ProcessM
