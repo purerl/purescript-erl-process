@@ -10,6 +10,7 @@ module Erl.Process
   , spawn
   , spawnLink
   , class HasProcess
+  , class ReceivesMessage
   , getProcess
   , trapExit
   , receiveWithTrap
@@ -101,3 +102,8 @@ instance processHasProcess :: HasProcess b (Process b) where
 
 instance processHasPid :: Raw.HasPid (Process b) where
   getPid (Process pid) = pid
+
+class ReceivesMessage :: forall k. k -> Type -> Constraint
+class ReceivesMessage a msg | a -> msg
+
+instance messageTypeProcessM :: ReceivesMessage (ProcessM msg) msg
