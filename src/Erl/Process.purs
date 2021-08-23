@@ -20,7 +20,6 @@ module Erl.Process
   ) where
 
 import Prelude
-
 import Data.Either (Either)
 import Effect (Effect)
 import Effect.Class (class MonadEffect, liftEffect)
@@ -29,7 +28,8 @@ import Erl.Process.Raw (ExitReason(..), ExitMsg(..)) as RawExport
 import Erl.Process.Raw (ExitReason)
 import Erl.Process.Raw as Raw
 
-newtype Process (a :: Type) = Process Raw.Pid
+newtype Process (a :: Type)
+  = Process Raw.Pid
 
 toPid :: forall a. Process a -> Raw.Pid
 toPid (Process pid) = pid
@@ -37,7 +37,8 @@ toPid (Process pid) = pid
 instance eqProcess :: Eq (Process a) where
   eq a b = eq (toPid a) (toPid b)
 
-newtype ProcessM (a :: Type) b = ProcessM (Effect b)
+newtype ProcessM (a :: Type) b
+  = ProcessM (Effect b)
 derive newtype instance functorProcessM :: Functor (ProcessM a)
 derive newtype instance applyProcessM :: Apply (ProcessM a)
 derive newtype instance applicativeProcessM :: Applicative (ProcessM a)
@@ -56,7 +57,8 @@ receive = ProcessM Raw.receive
 receiveWithTimeout :: forall a. Int -> a -> ProcessM a a
 receiveWithTimeout n a = ProcessM $ Raw.receiveWithTimeout n a
 
-newtype ProcessTrapM (a :: Type) b = ProcessTrapM (Effect b)
+newtype ProcessTrapM (a :: Type) b
+  = ProcessTrapM (Effect b)
 derive newtype instance functorProcessTrapM :: Functor (ProcessTrapM a)
 derive newtype instance applyProcessTrapM :: Apply (ProcessTrapM a)
 derive newtype instance applicativeProcessTrapM :: Applicative (ProcessTrapM a)
@@ -73,11 +75,13 @@ receiveWithTrapAndTimeout :: forall a. Int -> a -> ProcessTrapM a (Either ExitRe
 receiveWithTrapAndTimeout timeout default = ProcessTrapM $ Raw.receiveWithTrapAndTimeout timeout default
 
 trapExit :: forall a b. ProcessTrapM a b -> ProcessM a b
-trapExit (ProcessTrapM e) = ProcessM $ liftEffect do
-  void $ Raw.setProcessFlagTrapExit true
-  res <- e
-  void $ Raw.setProcessFlagTrapExit false
-  pure res
+trapExit (ProcessTrapM e) =
+  ProcessM
+    $ liftEffect do
+        void $ Raw.setProcessFlagTrapExit true
+        res <- e
+        void $ Raw.setProcessFlagTrapExit false
+        pure res
 
 instance selfProcessM :: HasSelf (ProcessM a) (Process a) where
   self :: forall a. ProcessM a (Process a)
@@ -107,3 +111,5 @@ class ReceivesMessage :: forall k. k -> Type -> Constraint
 class ReceivesMessage a msg | a -> msg
 
 instance messageTypeProcessM :: ReceivesMessage (ProcessM msg) msg
+
+instance messageTypeProcessTrapM :: ReceivesMessage (ProcessTrapM msg) msg
