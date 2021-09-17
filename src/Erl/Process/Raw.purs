@@ -14,10 +14,10 @@ module Erl.Process.Raw
   , class HasPid
   , getPid
   , exit
+  , unlink
   ) where
 
 import Prelude
-
 import Data.Either (Either)
 import Effect (Effect)
 import Foreign (Foreign)
@@ -46,7 +46,8 @@ class HasPid a where
 instance pidHasPid :: HasPid Pid where
   getPid = identity
 
-data ExitReason = ExitReason Pid ExitMsg
+data ExitReason
+  = ExitReason Pid ExitMsg
 data ExitMsg
   = Normal
   | Killed
@@ -59,3 +60,5 @@ foreign import receiveWithTrapAndTimeout :: forall a. Int -> a -> Effect (Either
 foreign import setProcessFlagTrapExit :: Boolean -> Effect Boolean
 
 foreign import exit :: Foreign -> Effect Unit
+
+foreign import unlink :: Pid -> Effect Unit
