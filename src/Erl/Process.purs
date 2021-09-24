@@ -4,6 +4,8 @@ module Erl.Process
   , ProcessTrapM
   , toPid
   , send
+  , self
+  , getProcess
   , (!)
   , receive
   , receiveWithTimeout
@@ -11,7 +13,7 @@ module Erl.Process
   , spawnLink
   , class HasProcess
   , class ReceivesMessage
-  , getProcess
+  , class HasSelf
   , trapExit
   , receiveWithTrap
   , receiveWithTrapAndTimeout
@@ -23,7 +25,6 @@ import Prelude
 import Data.Either (Either)
 import Effect (Effect)
 import Effect.Class (class MonadEffect, liftEffect)
-import Erl.Process.Class (class HasSelf)
 import Erl.Process.Raw (ExitReason(..), ExitMsg(..)) as RawExport
 import Erl.Process.Raw (ExitReason)
 import Erl.Process.Raw as Raw
@@ -83,10 +84,6 @@ trapExit (ProcessTrapM e) =
         void $ Raw.setProcessFlagTrapExit false
         pure res
 
-instance selfProcessM :: HasSelf (ProcessM a) (Process a) where
-  self :: forall a. ProcessM a (Process a)
-  self = ProcessM $ Process <$> Raw.self
-
 send :: forall a. Process a -> a -> Effect Unit
 send p x = Raw.send (toPid p) x
 
@@ -100,6 +97,9 @@ spawnLink (ProcessM e) = Process <$> Raw.spawnLink e
 
 class HasProcess b a where
   getProcess :: a -> Process b
+
+class HasSelf (x :: Type -> Type) a | x -> a where
+  self :: x (Process a)
 
 instance processHasProcess :: HasProcess b (Process b) where
   getProcess = identity
