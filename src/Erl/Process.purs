@@ -107,6 +107,10 @@ instance processHasProcess :: HasProcess b (Process b) where
 instance processHasPid :: Raw.HasPid (Process b) where
   getPid (Process pid) = pid
 
+instance selfProcessM :: HasSelf (ProcessM a) a where
+  self :: forall a. ProcessM a (Process a)
+  self = ProcessM $ Process <$> Raw.self
+
 class ReceivesMessage :: forall k. k -> Type -> Constraint
 class ReceivesMessage a msg | a -> msg
 
