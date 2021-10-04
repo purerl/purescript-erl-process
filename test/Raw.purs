@@ -32,7 +32,7 @@ tests =
 
     test "spawned process just sends" do
       parent <- self
-      pid <- spawn do
+      _pid <- spawn do
         parent `send` 111
         parent `send` true
       receive >>= \n -> assert $ n == 111
@@ -40,7 +40,7 @@ tests =
 
     test "spawnLinked process just sends" do
       parent <- self
-      pid <- spawnLink do
+      _pid <- spawnLink do
         parent `send` 111
         parent `send` true
       receive >>= \n -> assert $ n == 111

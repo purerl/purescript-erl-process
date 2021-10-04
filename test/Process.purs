@@ -6,8 +6,7 @@ import Control.Monad.Free (Free)
 import Data.Either (Either(..), isLeft)
 import Effect.Class (liftEffect)
 import Effect.Exception (throw)
-import Erl.Process (ExitReason, ProcessM, receive, receiveWithTrap, spawn, spawnLink, trapExit, (!))
-import Erl.Process.Class (self)
+import Erl.Process (ExitReason, ProcessM, receive, receiveWithTrap, self, spawn, spawnLink, trapExit, (!))
 import Erl.Process.Raw as Raw
 import Erl.Test.EUnit (TestF, suite, test)
 import Foreign as Foreign
@@ -76,7 +75,7 @@ tests =
           first <- receiveWithTrap
           liftEffect $ case (unsafeCoerce first) :: Either ExitReason Int of 
             Right 1 -> pure unit
-            other -> do
+            _other -> do
               throw "failed recv"
           second <- receiveWithTrap
           liftEffect $ testPid `Raw.send` (isLeft second)
