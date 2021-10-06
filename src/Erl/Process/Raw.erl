@@ -5,9 +5,9 @@
          spawnLink/1,
          send/1,
          'receive'/0,
-         receiveWithTimeout/2,
+         receiveWithTimeout_/2,
          receiveWithTrap/0,
-         receiveWithTrapAndTimeout/2,
+         receiveWithTrapAndTimeout_/2,
          self/0,
          setProcessFlagTrapExit/1,
          exit/1,
@@ -30,7 +30,7 @@ end.
     receive X -> X end
   end.
 
-receiveWithTimeout(Timeout, Msg) ->
+receiveWithTimeout_(Timeout, Msg) ->
   fun () ->
     receive
       X -> X
@@ -53,7 +53,7 @@ receiveWithTrap() ->
     end
   end.
 
-receiveWithTrapAndTimeout(Timeout, Msg) ->
+receiveWithTrapAndTimeout_(Timeout, Msg) ->
   fun () ->
     receive
       {'EXIT', Pid, killed} -> {left, {exitMsg, Pid, {killed}}};

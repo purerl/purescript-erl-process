@@ -23,6 +23,7 @@ module Erl.Process
 
 import Prelude
 import Data.Either (Either)
+import Data.Time.Duration (Milliseconds(..))
 import Effect (Effect)
 import Effect.Class (class MonadEffect, liftEffect)
 import Erl.Process.Raw (ExitReason(..), ExitMsg(..)) as RawExport
@@ -55,7 +56,7 @@ instance monadEffectProcessM :: MonadEffect (ProcessM a) where
 receive :: forall a. ProcessM a a
 receive = ProcessM Raw.receive
 
-receiveWithTimeout :: forall a. Int -> a -> ProcessM a a
+receiveWithTimeout :: forall a. Milliseconds -> a -> ProcessM a a
 receiveWithTimeout n a = ProcessM $ Raw.receiveWithTimeout n a
 
 newtype ProcessTrapM (a :: Type) b
@@ -72,7 +73,7 @@ instance monadEffectProcessTrapM :: MonadEffect (ProcessTrapM a) where
 receiveWithTrap :: forall a. ProcessTrapM a (Either ExitReason a)
 receiveWithTrap = ProcessTrapM Raw.receiveWithTrap
 
-receiveWithTrapAndTimeout :: forall a. Int -> a -> ProcessTrapM a (Either ExitReason a)
+receiveWithTrapAndTimeout :: forall a. Milliseconds -> a -> ProcessTrapM a (Either ExitReason a)
 receiveWithTrapAndTimeout timeout default = ProcessTrapM $ Raw.receiveWithTrapAndTimeout timeout default
 
 trapExit :: forall a b. ProcessTrapM a b -> ProcessM a b

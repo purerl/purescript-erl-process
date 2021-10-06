@@ -19,6 +19,8 @@ module Erl.Process.Raw
 
 import Prelude
 import Data.Either (Either)
+import Data.Int (round)
+import Data.Time.Duration (Milliseconds(..))
 import Effect (Effect)
 import Foreign (Foreign)
 
@@ -36,7 +38,10 @@ foreign import send :: forall a. Pid -> a -> Effect Unit
 
 foreign import receive :: forall a. Effect a
 
-foreign import receiveWithTimeout :: forall a. Int -> a -> Effect a
+receiveWithTimeout :: forall a. Milliseconds -> a -> Effect a
+receiveWithTimeout (Milliseconds ms) = receiveWithTimeout_ (round ms)
+
+foreign import receiveWithTimeout_ :: forall a. Int -> a -> Effect a
 
 foreign import self :: Effect Pid
 
@@ -55,7 +60,10 @@ data ExitMsg
 
 foreign import receiveWithTrap :: forall a. Effect (Either ExitReason a)
 
-foreign import receiveWithTrapAndTimeout :: forall a. Int -> a -> Effect (Either ExitReason a)
+receiveWithTrapAndTimeout :: forall a. Milliseconds -> a -> Effect (Either ExitReason a)
+receiveWithTrapAndTimeout (Milliseconds ms) = receiveWithTrapAndTimeout_ (round ms)
+
+foreign import receiveWithTrapAndTimeout_ :: forall a. Int -> a -> Effect (Either ExitReason a)
 
 foreign import setProcessFlagTrapExit :: Boolean -> Effect Boolean
 
