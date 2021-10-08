@@ -11,6 +11,7 @@
          self/0,
          setProcessFlagTrapExit/1,
          exit/1,
+         sendExitSignal/2,
          unlink/1
         ]).
 
@@ -72,5 +73,7 @@ setProcessFlagTrapExit(TrapExit) -> fun() ->
 end.
 
 exit(Term) -> fun () -> erlang:exit(Term) end.
+
+sendExitSignal(Term, Pid) -> fun () -> erlang:exit(Pid, Term) end.
 
 unlink(Pid) -> fun() -> erlang:unlink(Pid) end.

@@ -11,6 +11,7 @@ module Erl.Process
   , receiveWithTimeout
   , spawn
   , spawnLink
+  , sendExitSignal
   , class HasProcess
   , class ReceivesMessage
   , class HasSelf
@@ -27,8 +28,10 @@ import Data.Time.Duration (Milliseconds(..))
 import Effect (Effect)
 import Effect.Class (class MonadEffect, liftEffect)
 import Erl.Process.Raw (ExitReason(..), ExitMsg(..)) as RawExport
-import Erl.Process.Raw (ExitReason)
+import Erl.Process.Raw (ExitReason, getPid)
 import Erl.Process.Raw as Raw
+import Foreign (Foreign)
+import Unsafe.Coerce (unsafeCoerce)
 
 newtype Process (a :: Type)
   = Process Raw.Pid
@@ -95,6 +98,10 @@ spawn (ProcessM e) = Process <$> Raw.spawn e
 
 spawnLink :: forall a. ProcessM a Unit -> Effect (Process a)
 spawnLink (ProcessM e) = Process <$> Raw.spawnLink e
+
+sendExitSignal :: forall a. Foreign -> Process a -> Effect Unit
+sendExitSignal reason (Process pid) = do
+  Raw.sendExitSignal reason pid
 
 class HasProcess b a where
   getProcess :: a -> Process b

@@ -14,6 +14,7 @@ module Erl.Process.Raw
   , class HasPid
   , getPid
   , exit
+  , sendExitSignal
   , unlink
   ) where
 
@@ -66,6 +67,8 @@ receiveWithTrapAndTimeout (Milliseconds ms) = receiveWithTrapAndTimeout_ (round 
 foreign import receiveWithTrapAndTimeout_ :: forall a. Int -> a -> Effect (Either ExitReason a)
 
 foreign import setProcessFlagTrapExit :: Boolean -> Effect Boolean
+
+foreign import sendExitSignal :: Foreign -> Pid -> Effect Unit
 
 foreign import exit :: Foreign -> Effect Unit
 
