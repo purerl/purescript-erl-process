@@ -4,3 +4,4 @@ ebin/
 erl_crash.dump
 output/
 .psc-package/
+.spago/

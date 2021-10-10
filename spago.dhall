@@ -10,7 +10,6 @@ You can edit this file as you like.
   , "foreign"
   , "integers"
   , "prelude"
-  , "unsafe-coerce"
   ]
 , packages = ./packages.dhall
 , sources = [ "src/**/*.purs" ]

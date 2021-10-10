@@ -24,14 +24,13 @@ module Erl.Process
 
 import Prelude
 import Data.Either (Either)
-import Data.Time.Duration (Milliseconds(..))
+import Data.Time.Duration (Milliseconds)
 import Effect (Effect)
 import Effect.Class (class MonadEffect, liftEffect)
 import Erl.Process.Raw (ExitReason(..), ExitMsg(..)) as RawExport
-import Erl.Process.Raw (ExitReason, getPid)
+import Erl.Process.Raw (ExitReason)
 import Erl.Process.Raw as Raw
 import Foreign (Foreign)
-import Unsafe.Coerce (unsafeCoerce)
 
 newtype Process (a :: Type)
   = Process Raw.Pid
