@@ -13,8 +13,8 @@ module Erl.Process
   , spawnLink
   , sendExitSignal
   , class HasProcess
-  , class ReceivesMessage
   , class HasSelf
+  , class HasReceive
   , trapExit
   , receiveWithTrap
   , receiveWithTrapAndTimeout
@@ -54,12 +54,6 @@ unsafeRunProcessM (ProcessM b) = b
 
 instance monadEffectProcessM :: MonadEffect (ProcessM a) where
   liftEffect = ProcessM
-
-receive :: forall a. ProcessM a a
-receive = ProcessM Raw.receive
-
-receiveWithTimeout :: forall a. Milliseconds -> a -> ProcessM a a
-receiveWithTimeout n a = ProcessM $ Raw.receiveWithTimeout n a
 
 newtype ProcessTrapM (a :: Type) b
   = ProcessTrapM (Effect b)
@@ -118,9 +112,16 @@ instance selfProcessM :: HasSelf (ProcessM a) a where
   self :: forall a. ProcessM a (Process a)
   self = ProcessM $ Process <$> Raw.self
 
-class ReceivesMessage :: forall k. k -> Type -> Constraint
-class ReceivesMessage a msg | a -> msg
+class HasReceive :: (Type -> Type) -> Type -> Type -> Constraint
+class HasReceive a msg r | a -> msg r where
+  receive :: a r
 
-instance messageTypeProcessM :: ReceivesMessage (ProcessM msg) msg
+  receiveWithTimeout :: Milliseconds -> msg -> a r
 
-instance messageTypeProcessTrapM :: ReceivesMessage (ProcessTrapM msg) msg
+instance HasReceive (ProcessM msg) msg msg where
+  receive = ProcessM Raw.receive
+  receiveWithTimeout t d = ProcessM $ Raw.receiveWithTimeout t d
+
+instance HasReceive (ProcessTrapM msg) msg (Either ExitReason msg) where
+  receive = ProcessTrapM Raw.receiveWithTrap
+  receiveWithTimeout t d = ProcessTrapM $ Raw.receiveWithTrapAndTimeout t d

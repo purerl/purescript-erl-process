@@ -62,7 +62,7 @@ receiveWithTrapAndTimeout_(Timeout, Msg) ->
       {'EXIT', Pid, Other } -> {left, {exitMsg, Pid, {other, Other}}};
       X                     -> {right, X}
     after
-      Timeout -> Msg
+      Timeout -> {right, Msg}
     end
   end.
 

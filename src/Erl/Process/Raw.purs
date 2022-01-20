@@ -54,6 +54,7 @@ instance pidHasPid :: HasPid Pid where
 
 data ExitReason
   = ExitReason Pid ExitMsg
+
 data ExitMsg
   = Normal
   | Killed
