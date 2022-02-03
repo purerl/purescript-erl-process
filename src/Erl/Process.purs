@@ -41,6 +41,9 @@ toPid (Process pid) = pid
 instance eqProcess :: Eq (Process a) where
   eq a b = eq (toPid a) (toPid b)
 
+instance Show (Process pid) where
+  show (Process pid) = "(Process " <> show pid <> ")"
+
 newtype ProcessM (a :: Type) b
   = ProcessM (Effect b)
 derive newtype instance functorProcessM :: Functor (ProcessM a)
