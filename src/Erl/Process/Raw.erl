@@ -12,7 +12,8 @@
          setProcessFlagTrapExit/1,
          exit/1,
          sendExitSignal/2,
-         unlink/1
+         unlink/1,
+         show_/1
         ]).
 
 eqNative(X, Y) -> X == Y.
@@ -62,7 +63,7 @@ receiveWithTrapAndTimeout_(Timeout, Msg) ->
       {'EXIT', Pid, Other } -> {left, {exitMsg, Pid, {other, Other}}};
       X                     -> {right, X}
     after
-      Timeout -> Msg
+      Timeout -> {right, Msg}
     end
   end.
 
@@ -77,3 +78,6 @@ exit(Term) -> fun () -> erlang:exit(Term) end.
 sendExitSignal(Term, Pid) -> fun () -> erlang:exit(Pid, Term) end.
 
 unlink(Pid) -> fun() -> erlang:unlink(Pid) end.
+
+show_(Pid) ->
+    list_to_binary(erlang:pid_to_list(Pid)).

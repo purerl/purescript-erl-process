@@ -30,6 +30,11 @@ foreign import data Pid :: Type
 instance eqPid :: Eq Pid where
   eq = eqNative
 
+instance Show Pid where
+  show = show_
+
+foreign import show_ :: Pid -> String
+
 foreign import eqNative :: forall a. a -> a -> Boolean
 
 foreign import spawn :: (Effect Unit) -> Effect Pid
@@ -54,6 +59,7 @@ instance pidHasPid :: HasPid Pid where
 
 data ExitReason
   = ExitReason Pid ExitMsg
+
 data ExitMsg
   = Normal
   | Killed
