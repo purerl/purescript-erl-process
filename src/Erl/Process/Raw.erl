@@ -1,6 +1,7 @@
 -module(erl_process_raw@foreign).
 -export([
          eqNative/2,
+         compareNative/2,
          spawn/1,
          spawnLink/1,
          send/1,
@@ -17,6 +18,10 @@
         ]).
 
 eqNative(X, Y) -> X == Y.
+
+compareNative(X, Y) when X < Y -> {lT};
+compareNative(X, Y) when X == Y -> {eQ};
+compareNative(X, Y) -> {gT}.
 
 spawn(F) -> fun () -> erlang:spawn(fun () -> F() end) end.
 spawnLink(F) -> fun () -> erlang:spawn_link(fun () -> F() end) end.
