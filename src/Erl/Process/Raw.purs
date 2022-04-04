@@ -30,12 +30,16 @@ foreign import data Pid :: Type
 instance eqPid :: Eq Pid where
   eq = eqNative
 
+instance ordPid :: Ord Pid where
+  compare = compareNative
+
 instance Show Pid where
   show = show_
 
 foreign import show_ :: Pid -> String
 
 foreign import eqNative :: forall a. a -> a -> Boolean
+foreign import compareNative :: forall a. a -> a -> Ordering
 
 foreign import spawn :: (Effect Unit) -> Effect Pid
 foreign import spawnLink :: (Effect Unit) -> Effect Pid
