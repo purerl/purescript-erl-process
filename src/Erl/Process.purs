@@ -86,9 +86,14 @@ trapExit :: forall a b. ProcessTrapM a b -> ProcessM a b
 trapExit (ProcessTrapM e) =
   ProcessM
     $ liftEffect do
-        void $ Raw.setProcessFlagTrapExit true
+        -- If called from other purerl, trapexit should never already be set,
+        -- but if e.g. we are being called from Erlang we don't have that guarantee,
+        -- so it's probably best to return the trapexit state to whatever it was
+        -- set to originally.
+        alreadySet <- Raw.setProcessFlagTrapExit true
         res <- e
-        void $ Raw.setProcessFlagTrapExit false
+        when (not alreadySet)
+          (void $ Raw.setProcessFlagTrapExit false)
         pure res
 
 send :: forall a. Process a -> a -> Effect Unit
