@@ -1,25 +1,29 @@
 module Erl.Process
-  ( Process
+  ( (!)
+  , Process
   , ProcessM
   , ProcessTrapM
-  , toPid
-  , send
-  , self
+  , StartResponse
+  , StartResult
+  , class HasProcess
+  , class HasReceive
+  , class HasSelf
   , getProcess
-  , (!)
+  , module RawExport
   , receive
   , receiveWithTimeout
-  , spawn
-  , spawnLink
-  , sendExitSignal
-  , class HasProcess
-  , class HasSelf
-  , class HasReceive
-  , trapExit
   , receiveWithTrap
   , receiveWithTrapAndTimeout
+  , self
+  , send
+  , sendExitSignal
+  , spawn
+  , spawnLink
+  , start
+  , startLink
+  , toPid
+  , trapExit
   , unsafeRunProcessM
-  , module RawExport
   ) where
 
 import Prelude
@@ -97,6 +101,22 @@ spawn (ProcessM e) = Process <$> Raw.spawn e
 
 spawnLink :: forall a. ProcessM a Unit -> Effect (Process a)
 spawnLink (ProcessM e) = Process <$> Raw.spawnLink e
+
+type StartResult msg r
+  = { pid :: Process msg
+    , result :: r
+    }
+
+type StartResponse msg r
+  = { cont :: ProcessM msg Unit
+    , result :: r
+    }
+
+foreign import start :: forall msg r. ProcessM msg (StartResponse msg r) -> Effect (Either Foreign (StartResult msg r))
+foreign import startLink :: forall msg r. ProcessM msg (StartResponse msg r) -> Effect (Either Foreign (StartResult msg r))
+
+-- This is just to suppress an unused export warning in the FFI module...
+foreign import launcher :: Void -> Void -> Void
 
 sendExitSignal :: forall a. Foreign -> Process a -> Effect Unit
 sendExitSignal reason (Process pid) = do

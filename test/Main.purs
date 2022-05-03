@@ -1,7 +1,6 @@
 module Test.Main where
 
 import Prelude
-
 import Control.Monad.Free (Free)
 import Effect (Effect)
 import Erl.Test.EUnit (TestF, runTests)
