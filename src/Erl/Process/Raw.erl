@@ -14,17 +14,23 @@
          exit/1,
          sendExitSignal/2,
          unlink/1,
-         show_/1
+         show_/1,
+         isAlive/1
         ]).
 
 eqNative(X, Y) -> X == Y.
 
 compareNative(X, Y) when X < Y -> {lT};
 compareNative(X, Y) when X == Y -> {eQ};
-compareNative(X, Y) -> {gT}.
+compareNative(_X, _Y) -> {gT}.
 
-spawn(F) -> fun () -> erlang:spawn(fun () -> F() end) end.
-spawnLink(F) -> fun () -> erlang:spawn_link(fun () -> F() end) end.
+spawn(F) -> fun () -> erlang:spawn(F) end.
+spawnLink(F) -> fun () -> erlang:spawn_link(F) end.
+
+isAlive(Pid) ->
+  fun() ->
+      is_process_alive(Pid)
+  end.
 
 send(Pid) -> fun (X) ->
   fun () ->
@@ -55,7 +61,7 @@ receiveWithTrap() ->
         {left, {exitMsg, Pid, {normal}}};
       {'EXIT', Pid, Other } ->
         {left, {exitMsg, Pid, {other, Other}}};
-      X                     -> 
+      X                     ->
         {right, X}
     end
   end.

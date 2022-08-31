@@ -1,24 +1,30 @@
 module Erl.Process
-  ( Process
+  ( (!)
+  , Process
   , ProcessM
   , ProcessTrapM
-  , toPid
-  , send
-  , self
+  , StartResponse
+  , StartResult
+  , class HasProcess
+  , class HasReceive
+  , class HasSelf
   , getProcess
-  , (!)
+  , module RawExport
   , receive
   , receiveWithTimeout
-  , spawn
-  , spawnLink
-  , sendExitSignal
-  , class HasProcess
-  , class HasSelf
-  , class HasReceive
-  , trapExit
   , receiveWithTrap
   , receiveWithTrapAndTimeout
+  , self
+  , send
+  , sendExitSignal
+  , spawn
+  , spawnLink
+  , start
+  , startLink
+  , toPid
+  , trapExit
   , unsafeRunProcessM
+  , isAlive
   , module RawExport
   ) where
 
@@ -32,8 +38,10 @@ import Erl.Process.Raw (ExitReason)
 import Erl.Process.Raw as Raw
 import Foreign (Foreign)
 
-newtype Process (a :: Type)
-  = Process Raw.Pid
+newtype Process (a :: Type) = Process Raw.Pid
+
+isAlive :: forall a. Process a -> Effect Boolean
+isAlive (Process pid) = Raw.isAlive pid
 
 toPid :: forall a. Process a -> Raw.Pid
 toPid (Process pid) = pid
@@ -47,8 +55,8 @@ instance ordProcess :: Ord (Process a) where
 instance Show (Process pid) where
   show (Process pid) = "(Process " <> show pid <> ")"
 
-newtype ProcessM (a :: Type) b
-  = ProcessM (Effect b)
+newtype ProcessM (a :: Type) b = ProcessM (Effect b)
+
 derive newtype instance functorProcessM :: Functor (ProcessM a)
 derive newtype instance applyProcessM :: Apply (ProcessM a)
 derive newtype instance applicativeProcessM :: Applicative (ProcessM a)
@@ -61,8 +69,8 @@ unsafeRunProcessM (ProcessM b) = b
 instance monadEffectProcessM :: MonadEffect (ProcessM a) where
   liftEffect = ProcessM
 
-newtype ProcessTrapM (a :: Type) b
-  = ProcessTrapM (Effect b)
+newtype ProcessTrapM (a :: Type) b = ProcessTrapM (Effect b)
+
 derive newtype instance functorProcessTrapM :: Functor (ProcessTrapM a)
 derive newtype instance applyProcessTrapM :: Apply (ProcessTrapM a)
 derive newtype instance applicativeProcessTrapM :: Applicative (ProcessTrapM a)
@@ -82,9 +90,14 @@ trapExit :: forall a b. ProcessTrapM a b -> ProcessM a b
 trapExit (ProcessTrapM e) =
   ProcessM
     $ liftEffect do
-        void $ Raw.setProcessFlagTrapExit true
+        -- If called from other purerl, trapexit should never already be set,
+        -- but if e.g. we are being called from Erlang we don't have that guarantee,
+        -- so it's probably best to return the trapexit state to whatever it was
+        -- set to originally.
+        alreadySet <- Raw.setProcessFlagTrapExit true
         res <- e
-        void $ Raw.setProcessFlagTrapExit false
+        when (not alreadySet)
+          (void $ Raw.setProcessFlagTrapExit false)
         pure res
 
 send :: forall a. Process a -> a -> Effect Unit
@@ -97,6 +110,22 @@ spawn (ProcessM e) = Process <$> Raw.spawn e
 
 spawnLink :: forall a. ProcessM a Unit -> Effect (Process a)
 spawnLink (ProcessM e) = Process <$> Raw.spawnLink e
+
+type StartResult msg r =
+  { pid :: Process msg
+  , result :: r
+  }
+
+type StartResponse msg r =
+  { cont :: ProcessM msg Unit
+  , result :: r
+  }
+
+foreign import start :: forall msg r. ProcessM msg (StartResponse msg r) -> Effect (Either Foreign (StartResult msg r))
+foreign import startLink :: forall msg r. ProcessM msg (StartResponse msg r) -> Effect (Either Foreign (StartResult msg r))
+
+-- This is just to suppress an unused export warning in the FFI module...
+foreign import launcher :: Void -> Void -> Void
 
 sendExitSignal :: forall a. Foreign -> Process a -> Effect Unit
 sendExitSignal reason (Process pid) = do

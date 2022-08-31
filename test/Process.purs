@@ -2,15 +2,16 @@ module Test.Process where
 
 import Prelude
 import Control.Monad.Free (Free)
-import Data.Either (Either(..), isLeft)
+import Data.Either (Either(..), fromLeft', fromRight', isLeft)
 import Data.Time.Duration (Milliseconds(..))
 import Effect.Class (liftEffect)
 import Effect.Exception (throw)
-import Erl.Process (ExitReason, ProcessM, receive, receiveWithTimeout, self, spawn, spawnLink, trapExit, (!))
+import Erl.Process (ExitReason, ProcessM, receive, receiveWithTimeout, self, spawn, spawnLink, start, startLink, trapExit, (!))
 import Erl.Process.Raw as Raw
 import Erl.Test.EUnit (TestF, suite, test)
 import Foreign as Foreign
-import Test.Assert (assertTrue)
+import Partial.Unsafe (unsafeCrashWith)
+import Test.Assert (assertEqual, assertTrue)
 import Unsafe.Coerce (unsafeCoerce)
 
 data Foo
@@ -20,8 +21,67 @@ data Foo
 derive instance eqFoo :: Eq Foo
 
 tests :: Free TestF Unit
-tests =
-  suite "process tests" do
+tests = do
+  spawnTests
+  startTests
+
+startTests :: Free TestF Unit
+startTests =
+  suite "process start tests" do
+    test "Get initial response and messages from start" $ mkSimpleStartTest start
+    test "Get initial response and messages from startLink" $ mkSimpleStartTest startLink
+    test "Crashes in the starter are returned as Left (start)" $ crashStartTest
+    test "Crashes in the starter are returned as Left (startLink)" $ crashStartLinkTest
+  where
+
+  mkSimpleStartTest startMethod = do
+    parent <- Raw.self
+    let
+      starter = do
+        -- Confirm we can receive messages in our starter
+        me <- self
+        liftEffect $ me ! 1
+        x <- receive
+        pure
+          { result: "initialResponse" <> show x
+          , cont
+          }
+      cont = do
+        -- Confirm we can receive messages in our runner
+        a <- receive
+        b <- receive
+        liftEffect $ parent `Raw.send` (a == 1 && b == 2)
+    { result: initialResult, pid: p } <- unsafeFromRight "we should get an initial result" <$> startMethod starter
+    assertEqual
+      { actual: initialResult
+      , expected: "initialResponse1"
+      }
+    p ! 1
+    p ! 2
+    Raw.receive >>= assertTrue
+
+  crashStartTest = do
+    let starter = unsafeCoerce 1
+    _foreignError <- unsafeFromLeft "we should get an error from init" <$> start starter
+    pure unit
+
+  crashStartLinkTest = do
+    -- Run the process inside a linked process that itself catches Exit
+    testPid <- Raw.self
+    void
+      $ spawnLink do
+          trapExit do
+            resp <- liftEffect do startLink $ (unsafeCoerce 1 :: ProcessM Int _)
+            let _foreignError = unsafeFromLeft "we should get an error from init" resp
+            liftEffect $ testPid `Raw.send` true
+            pure unit
+    Raw.receive >>= assertTrue
+    --void Raw.receive
+    pure unit
+
+spawnTests :: Free TestF Unit
+spawnTests =
+  suite "process spawn tests" do
     -- Use raw process communication to talk to the test process as it is not a typed Process
     test "send stuff to spawned process" do
       parent <- Raw.self
@@ -108,3 +168,8 @@ tests =
                     Right "default" -> testPid `Raw.send` true
                     _ -> testPid `Raw.send` false
       Raw.receive >>= assertTrue
+
+unsafeFromRight :: forall a b. String -> Either a b -> b
+unsafeFromRight s = fromRight' (\_ -> unsafeCrashWith s)
+unsafeFromLeft :: forall a b. String -> Either a b -> a
+unsafeFromLeft s = fromLeft' (\_ -> unsafeCrashWith s)

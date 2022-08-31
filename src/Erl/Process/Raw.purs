@@ -16,6 +16,7 @@ module Erl.Process.Raw
   , exit
   , sendExitSignal
   , unlink
+  , isAlive
   ) where
 
 import Prelude
@@ -26,6 +27,8 @@ import Effect (Effect)
 import Foreign (Foreign)
 
 foreign import data Pid :: Type
+
+foreign import isAlive :: Pid -> Effect Boolean
 
 instance eqPid :: Eq Pid where
   eq = eqNative
@@ -61,8 +64,7 @@ class HasPid a where
 instance pidHasPid :: HasPid Pid where
   getPid = identity
 
-data ExitReason
-  = ExitReason Pid ExitMsg
+data ExitReason = ExitReason Pid ExitMsg
 
 data ExitMsg
   = Normal
